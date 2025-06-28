@@ -1,24 +1,60 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Boba Tea Shop</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
 <body>
   <h1>Welcome to Boba Bliss 🧋</h1>
+
+  <h2>Menu</h2>
   <div id="menu"></div>
 
+  <h2>Place Your Order</h2>
+  <form id="orderForm">
+    <input type="text" id="customerName" placeholder="Your name" required />
+    <select id="drinkSelect"></select>
+    <button type="submit">Add Order</button>
+  </form>
+
+  <p id="confirmation"></p>
+
   <script>
+    let drinks = [];
+
     fetch('/api/drinks')
       .then(res => res.json())
       .then(data => {
+        drinks = data;
+
         const menu = document.getElementById('menu');
+        const drinkSelect = document.getElementById('drinkSelect');
+
         data.forEach(drink => {
           const item = document.createElement('div');
-          item.innerHTML = `<h2>${drink.name}</h2><p>$${drink.price.toFixed(2)}</p>`;
+          item.innerHTML = `<h3>${drink.name}</h3><p>$${drink.price.toFixed(2)}</p>`;
           menu.appendChild(item);
+
+          const option = document.createElement('option');
+          option.value = drink.id;
+          option.textContent = drink.name;
+          drinkSelect.appendChild(option);
         });
       });
+
+    document.getElementById('orderForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('customerName').value;
+      const drinkId = document.getElementById('drinkSelect').value;
+
+      fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, drinkId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('confirmation').textContent = `✅ Order placed for ${data.name}: ${data.drink.name}`;
+        document.getElementById('orderForm').reset();
+      })
+      .catch(err => {
+        document.getElementById('confirmation').textContent = '❌ Order failed.';
+      });
+    });
   </script>
 </body>
-</html>
